@@ -1,0 +1,9 @@
+// Cloudflare Workers 靜態網站設定：建置指令 bash _tools/build.sh 會產生 dist/
+// name 必須和 Cloudflare 上的專案名稱一致
+{
+  "name": "jianliang-goose",
+  "compatibility_date": "2026-06-01",
+  "assets": {
+    "directory": "./dist"
+  }
+}
