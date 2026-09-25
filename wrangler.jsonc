@@ -1,5 +1,5 @@
 // Cloudflare Workers 靜態網站設定：建置指令 bash _tools/build.sh 會產生 dist/
-// name 必須和 Cloudflare 上的專案名稱一致
+// name 必須和 Cloudflare 上的專案名稱一致；previews 區塊讓 preview 分支能產生預覽網址
 {
   "name": "jianliang-goose",
   "main": "worker/index.js",
@@ -7,5 +7,6 @@
   "assets": {
     "directory": "./dist",
     "binding": "ASSETS"
-  }
+  },
+  "previews": {}
 }
