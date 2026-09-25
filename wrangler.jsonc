@@ -2,8 +2,10 @@
 // name 必須和 Cloudflare 上的專案名稱一致
 {
   "name": "jianliang-goose",
+  "main": "worker/index.js",
   "compatibility_date": "2026-06-01",
   "assets": {
-    "directory": "./dist"
+    "directory": "./dist",
+    "binding": "ASSETS"
   }
 }
