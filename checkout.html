@@ -7,7 +7,7 @@
   <link rel="preconnect" href="https://fonts.googleapis.com">
   <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
   <link href="https://fonts.googleapis.com/css2?family=Noto+Sans+TC:wght@400;500;700&family=Noto+Serif+TC:wght@500;700&family=Outfit:wght@400;600;700&display=swap" rel="stylesheet">
-  <link rel="stylesheet" href="css/style.css?v=1">
+  <link rel="stylesheet" href="css/style.css?v=3">
 </head>
 <body>
   <div id="siteHeader"></div>
@@ -32,11 +32,25 @@
   <div id="siteFooter"></div>
 
   <script src="data.js"></script>
-  <script src="js/main.js?v=1"></script>
+  <script src="js/main.js?v=2"></script>
   <script src="js/shop.js?v=1"></script>
+  <script src="js/cvs-picker.js?v=1"></script>
   <script>
     let allProducts = [];
     let shopSettings = {};
+    let storePicker = null;
+
+    // 收款 QR Code（LINE Pay 待店家提供後填入圖片路徑）
+    const PAY_QR = {
+      jko: 'images/pay-jkopay.jpg',
+      linepay: '',
+    };
+
+    function payQrHtml(src, label) {
+      return src
+        ? `<img src="${src}" alt="建良鵝肉 ${label} 收款 QR Code">`
+        : `<div class="pay-qr-placeholder">${label}<br>收款碼<br>（待提供）</div>`;
+    }
 
     function buildLines() {
       const cart = getCart();
@@ -136,15 +150,7 @@
                     </label>
                   </div>
                 </div>
-                <div class="form-group">
-                  <label class="form-label">收件門市（店名 / 店號） <span class="required">*</span></label>
-                  <input type="text" class="form-input" id="storeInfo" placeholder="例如：全家新竹東園店 / 020814">
-                  <div class="form-help">
-                    不知道店號？點此查詢：
-                    <a href="https://www.family.com.tw/marketing/inquiry.aspx" target="_blank" style="color: #00A84D; font-weight: 600; margin: 0 8px;">全家門市查詢</a>
-                    <a href="https://emap.pcsc.com.tw/" target="_blank" style="color: #E11F26; font-weight: 600;">7-11 門市查詢</a>
-                  </div>
-                </div>
+                <div class="form-group store-picker" id="storePicker"></div>
                 <div class="form-group">
                   <label class="form-label">收件人姓名（如同訂購人可留空）</label>
                   <input type="text" class="form-input" id="receiverName" placeholder="同訂購人">
@@ -164,7 +170,7 @@
             <!-- 付款方式 -->
             <div class="form-card">
               <h2>付款方式</h2>
-              <div class="card-desc">您可以選擇匯款轉帳，或於收件時付款給超商人員。</div>
+              <div class="card-desc">本店採先付款、後出貨，超商取貨不提供貨到付款。付款後請填寫下方資訊，我們確認款項後就會安排出貨。</div>
               <div class="radio-group">
                 <label class="radio-tile selected" data-payment="atm">
                   <input type="radio" name="paymentMethod" value="atm" checked>
@@ -173,11 +179,18 @@
                     <div class="tile-sub">凱基銀行 ・ 轉帳後填寫末 5 碼</div>
                   </div>
                 </label>
-                <label class="radio-tile" data-payment="cod">
-                  <input type="radio" name="paymentMethod" value="cod">
+                <label class="radio-tile" data-payment="jko">
+                  <input type="radio" name="paymentMethod" value="jko">
                   <div class="tile-text">
-                    <div class="tile-title">貨到付款</div>
-                    <div class="tile-sub">超商取貨時付款 ・ 不收手續費</div>
+                    <div class="tile-title">街口支付</div>
+                    <div class="tile-sub">掃描 QR Code 付款</div>
+                  </div>
+                </label>
+                <label class="radio-tile" data-payment="linepay">
+                  <input type="radio" name="paymentMethod" value="linepay">
+                  <div class="tile-text">
+                    <div class="tile-title">LINE Pay</div>
+                    <div class="tile-sub">掃描 QR Code 付款</div>
                   </div>
                 </label>
               </div>
@@ -205,12 +218,45 @@
                 </div>
               </div>
 
-              <!-- COD info -->
-              <div id="codFields" style="margin-top: 18px; display: none;">
-                <div class="payment-info-box">
-                  <div><strong>📦 貨到付款說明</strong></div>
-                  <div style="margin-top: 6px;">商品送達超商時，請至取貨櫃台支付訂單金額。</div>
-                  <div style="margin-top: 6px; color: var(--ink-mute);">提醒：未取貨將影響您未來的訂購權益，請務必於 7 日內取貨。</div>
+              <!-- 街口支付 -->
+              <div id="jkoFields" style="margin-top: 18px; display: none;">
+                <div class="payment-info-box pay-qr">
+                  ${payQrHtml(PAY_QR.jko, '街口支付')}
+                  <div>
+                    <div><strong>📱 街口支付</strong></div>
+                    <div>請掃描 QR Code，或截圖後於街口 APP 內掃描完成付款。</div>
+                  </div>
+                </div>
+                <div class="form-row" style="margin-top: 14px;">
+                  <div class="form-group">
+                    <label class="form-label">街口帳號 / 暱稱 <span class="required">*</span></label>
+                    <input type="text" class="form-input" id="jkoAccount" placeholder="您的街口帳號或暱稱">
+                  </div>
+                  <div class="form-group">
+                    <label class="form-label">付款日期 <span class="required">*</span></label>
+                    <input type="date" class="form-input" id="jkoDate">
+                  </div>
+                </div>
+              </div>
+
+              <!-- LINE Pay -->
+              <div id="linepayFields" style="margin-top: 18px; display: none;">
+                <div class="payment-info-box pay-qr">
+                  ${payQrHtml(PAY_QR.linepay, 'LINE Pay')}
+                  <div>
+                    <div><strong>📱 LINE Pay</strong></div>
+                    <div>請掃描 QR Code，或截圖後於 LINE Pay 內掃描完成付款。</div>
+                  </div>
+                </div>
+                <div class="form-row" style="margin-top: 14px;">
+                  <div class="form-group">
+                    <label class="form-label">LINE 顯示名稱 <span class="required">*</span></label>
+                    <input type="text" class="form-input" id="linepayName" placeholder="付款時的 LINE 名稱">
+                  </div>
+                  <div class="form-group">
+                    <label class="form-label">付款日期 <span class="required">*</span></label>
+                    <input type="date" class="form-input" id="linepayDate">
+                  </div>
                 </div>
               </div>
             </div>
@@ -264,18 +310,23 @@
 
       const shippingFields = document.getElementById('shippingFields');
       const selfFields = document.getElementById('selfFields');
-      const atmFields = document.getElementById('atmFields');
-      const codFields = document.getElementById('codFields');
+      const payFields = {
+        atm: document.getElementById('atmFields'),
+        jko: document.getElementById('jkoFields'),
+        linepay: document.getElementById('linepayFields'),
+      };
+
+      storePicker = createCvsPicker(document.getElementById('storePicker'));
+      storePicker.setChain(document.querySelector('input[name="storeType"]:checked').value);
 
       bindRadios('deliveryMethod', (v) => {
         shippingFields.style.display = v === 'shipping' ? '' : 'none';
         selfFields.style.display = v === 'self' ? '' : 'none';
         updateSummary();
       });
-      bindRadios('storeType');
+      bindRadios('storeType', (v) => storePicker.setChain(v));
       bindRadios('paymentMethod', (v) => {
-        atmFields.style.display = v === 'atm' ? '' : 'none';
-        codFields.style.display = v === 'cod' ? '' : 'none';
+        Object.entries(payFields).forEach(([k, el]) => { el.style.display = k === v ? '' : 'none'; });
       });
 
       // Render summary items
@@ -321,12 +372,15 @@
       let deliveryLabel = '';
 
       if (dm === 'shipping') {
-        const storeInfo = document.getElementById('storeInfo').value.trim();
-        if (!storeInfo) { showToast('請填寫收件門市資訊', 'error'); return; }
+        const picked = storePicker.getValue();
+        if (!picked) { showToast('請選擇收件門市', 'error'); storePicker.focus(); return; }
         const storeType = document.querySelector('input[name="storeType"]:checked').value;
-        const storeLabel = storeType === '711' ? '7-11' : '全家 FamilyMart';
+        const storeLabel = CVS_CHAINS[storeType].label;
+        const storeText = picked.store
+          ? `${picked.store.name} / ${picked.store.id} / ${picked.store.addr}`
+          : picked.text;
         const receiver = document.getElementById('receiverName').value.trim();
-        storeInfoFull = `${storeLabel} - ${storeInfo}` + (receiver ? `（收件人：${receiver}）` : '');
+        storeInfoFull = `${storeLabel} - ${storeText}` + (receiver ? `（收件人：${receiver}）` : '');
         deliveryLabel = '冷凍店到店';
       } else {
         pickupTime = document.getElementById('pickupTime').value.trim();
@@ -343,9 +397,20 @@
         if (!date) { showToast('請填寫轉帳日期', 'error'); return; }
         paymentInfo = `帳號末5碼: ${last5}, 日期: ${date}`;
         paymentLabel = 'ATM轉帳';
+      } else if (pm === 'jko') {
+        const account = document.getElementById('jkoAccount').value.trim();
+        const date = document.getElementById('jkoDate').value;
+        if (!account) { showToast('請填寫您的街口帳號或暱稱', 'error'); return; }
+        if (!date) { showToast('請填寫付款日期', 'error'); return; }
+        paymentInfo = `街口帳號: ${account}, 日期: ${date}`;
+        paymentLabel = '街口支付';
       } else {
-        paymentInfo = '貨到付款';
-        paymentLabel = '貨到付款';
+        const lineName = document.getElementById('linepayName').value.trim();
+        const date = document.getElementById('linepayDate').value;
+        if (!lineName) { showToast('請填寫付款時的 LINE 顯示名稱', 'error'); return; }
+        if (!date) { showToast('請填寫付款日期', 'error'); return; }
+        paymentInfo = `LINE 名稱: ${lineName}, 日期: ${date}`;
+        paymentLabel = 'LINE Pay';
       }
 
       const t = calcTotals(lines, dm);

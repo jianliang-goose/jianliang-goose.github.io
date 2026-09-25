@@ -29,9 +29,10 @@ const NAV = [
   { href: 'contact.html',  label: '聯絡我們', match: ['contact.html'] },
 ];
 
+// Cloudflare Pages 會把 about.html 轉成 /about，兩種網址都要認得
 function currentPage() {
-  const p = location.pathname.split('/').pop() || 'index.html';
-  return p;
+  const p = location.pathname.split('/').pop() || 'index';
+  return p.endsWith('.html') ? p : p + '.html';
 }
 
 function renderHeader() {
@@ -147,7 +148,6 @@ function renderFooter() {
         </div>
         <div class="footer-bottom">
           &copy; ${year} ${SITE.brandZh} JianLiang Goose. All Rights Reserved.
-          ・想看限時團購？<a href="https://jianliang-goose.github.io/group_order/" target="_blank">前往團購頁面</a>
         </div>
       </div>
     </footer>
@@ -248,6 +248,30 @@ function copyToClipboard(text, btn) {
 /* ----------- Number formatter ----------- */
 function fmtPrice(n) {
   return '$' + Number(n || 0).toLocaleString('en-US');
+}
+
+/* ----------- 加熱方式（常見問題頁；插圖與文字取自加熱方式小卡） ----------- */
+const HEATING_METHODS = [
+  { img: 'images/heating/pot.svg', title: '隔水加熱', text: '將水放入鍋中煮滾後，將已退冰的袋裝鵝肉放入水中加熱 <span class="nowrap">5 分鐘</span>，剪開包裝倒出即可享用。' },
+  { img: 'images/heating/microwave.svg', title: '微波加熱', text: '退冰後，剪開包裝倒入碗中，放置微波爐中火加熱約 <span class="nowrap">3–5 分鐘</span>即可享用。（請自行斟酌加熱時間）' },
+  { img: 'images/heating/ricecooker.svg', title: '電鍋加熱', text: '將退冰後的袋裝鵝肉以電鍋蒸煮約 <span class="nowrap">10–15 分鐘</span>，剪開即可享用。' },
+];
+
+function heatingGuideHTML() {
+  const items = HEATING_METHODS.map(m => `
+    <div class="heating-item">
+      <div class="heating-illust"><img src="${m.img}" alt="${m.title}示意圖" loading="lazy"></div>
+      <h3>${m.title}</h3>
+      <p>${m.text}</p>
+    </div>`).join('');
+  return `
+    <div class="heating-guide">
+      <div class="heating-head">
+        <h2>加熱方式</h2>
+        <p>食用前請先退冰，再選擇以下任一方式加熱。</p>
+      </div>
+      <div class="heating-grid">${items}</div>
+    </div>`;
 }
 
 /* ----------- DOMReady wiring ----------- */

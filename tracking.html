@@ -8,7 +8,7 @@
   <link rel="preconnect" href="https://fonts.googleapis.com">
   <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
   <link href="https://fonts.googleapis.com/css2?family=Noto+Sans+TC:wght@400;500;700&family=Noto+Serif+TC:wght@500;700&family=Outfit:wght@400;600;700&display=swap" rel="stylesheet">
-  <link rel="stylesheet" href="css/style.css?v=1">
+  <link rel="stylesheet" href="css/style.css?v=3">
 </head>
 <body>
   <div id="siteHeader"></div>
@@ -26,7 +26,7 @@
           <div class="form-group">
             <label class="form-label">手機號碼 <span class="required">*</span></label>
             <input type="tel" class="form-input" id="trackPhone" required placeholder="0912-345-678 或 0912345678">
-            <div class="form-help">系統會找出與此號碼相關的所有訂單（含團購頁訂單）</div>
+            <div class="form-help">系統會找出與此號碼相關的所有訂單</div>
           </div>
           <button type="submit" class="btn btn-primary btn-block btn-lg" id="trackBtn">查詢訂單</button>
         </form>
@@ -40,7 +40,7 @@
 
   <div id="siteFooter"></div>
 
-  <script src="js/main.js?v=1"></script>
+  <script src="js/main.js?v=2"></script>
   <script src="js/shop.js?v=1"></script>
   <script>
     function statusClass(status) {
@@ -65,7 +65,7 @@
         root.innerHTML = '';
         return;
       }
-      root.innerHTML = `<h3 style="font-family: var(--font-brand); letter-spacing: 2px; margin-bottom: 16px;">找到 ${orders.length} 筆訂單</h3>` +
+      root.innerHTML = `<h3 style="font-family: var(--font-serif); letter-spacing: 2px; margin-bottom: 16px;">找到 ${orders.length} 筆訂單</h3>` +
         orders.map(o => `
           <div class="tracking-card">
             <div class="order-head">

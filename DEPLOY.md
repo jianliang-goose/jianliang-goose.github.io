@@ -64,6 +64,20 @@ git push -u origin main
 
 ---
 
+## 超商門市清單（結帳頁「選擇收件門市」）
+
+- 資料在 `data/cvs-711.json`、`data/cvs-family.json`，由 `_tools/update_cvs_stores.py` 從 7-11、全家官網的門市查詢抓取。
+- 7-11 只收錄有「冷凍交貨便」的門市；全家收錄全部門市；兩家都不含離島。
+- GitHub Actions（`.github/workflows/update-cvs-stores.yml`）每週一清晨自動更新。想立刻更新：repo 的 **Actions → 更新超商門市資料 → Run workflow**。
+- 如果抓到的門市數量異常減少（例如對方網站改版），程式會停止、保留舊資料，GitHub 會寄信通知這次執行失敗。
+- 在自己電腦手動更新：`python _tools/update_cvs_stores.py`，再把 `data/` 推上去。
+
+## 收款 QR Code
+
+街口支付、LINE Pay 的收款碼設定在 `checkout.html` 的 `PAY_QR`，圖片放在 `images/`。
+
+---
+
 ## 自訂網域（選用）
 
 之後想用例如 `www.jianliang-goose.com` 這類網域：
@@ -75,12 +89,6 @@ git push -u origin main
 
 ---
 
-## 兩個網址的關係
+## 與團購頁的關係
 
-| 網址 | 用途 | 來源 repo |
-|---|---|---|
-| https://jianliang-goose.github.io/ | 官方網站（多頁、購物車、結帳） | `jianliang-goose.github.io` |
-| https://jianliang-goose.github.io/group_order/ | 限時團購頁（既有單頁） | `group_order` |
-
-兩邊互相連結（官網 footer、首頁 banner、FAQ、最新消息都有引導連結）。
-共用同一個 Google Apps Script 後端，訂單寫到同一個 Sheet。
+舊的限時團購頁（`group_order` repo）已停用，官網上不再連到它。官網沿用同一個 Google Apps Script 後端與同一份 Google Sheet，舊團購訂單也在同一張訂單表裡。

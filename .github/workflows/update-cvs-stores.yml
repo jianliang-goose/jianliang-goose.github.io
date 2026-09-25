@@ -1,0 +1,46 @@
+# 每週自動更新結帳頁的超商門市清單（data/cvs-711.json、data/cvs-family.json）
+# 也可以在 GitHub 的 Actions 分頁手動按「Run workflow」立即更新
+name: 更新超商門市資料
+
+on:
+  schedule:
+    - cron: '0 19 * * 0'   # 每週一 03:00（台灣時間）
+  workflow_dispatch:
+
+permissions:
+  contents: write
+  pages: write
+
+jobs:
+  update:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+
+      - uses: actions/setup-python@v5
+        with:
+          python-version: '3.12'
+
+      - name: 抓取最新門市資料
+        run: python _tools/update_cvs_stores.py
+
+      - name: 有變動就提交
+        id: commit
+        run: |
+          if git diff --quiet -- data/; then
+            echo "門市資料沒有變動"
+            echo "changed=false" >> "$GITHUB_OUTPUT"
+            exit 0
+          fi
+          git config user.name "github-actions[bot]"
+          git config user.email "41898282+github-actions[bot]@users.noreply.github.com"
+          git add data/
+          git commit -m "更新超商門市資料 $(TZ=Asia/Taipei date +%Y-%m-%d)"
+          git push
+          echo "changed=true" >> "$GITHUB_OUTPUT"
+
+      - name: 重新發布網站
+        if: steps.commit.outputs.changed == 'true'
+        env:
+          GH_TOKEN: ${{ github.token }}
+        run: gh api -X POST "repos/${{ github.repository }}/pages/builds" || echo "GitHub Pages 會自動重新發布"

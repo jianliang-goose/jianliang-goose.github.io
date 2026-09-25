@@ -8,7 +8,7 @@
   <link rel="preconnect" href="https://fonts.googleapis.com">
   <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
   <link href="https://fonts.googleapis.com/css2?family=Noto+Sans+TC:wght@400;500;700&family=Noto+Serif+TC:wght@500;700&family=Outfit:wght@400;600;700&display=swap" rel="stylesheet">
-  <link rel="stylesheet" href="css/style.css?v=1">
+  <link rel="stylesheet" href="css/style.css?v=3">
 </head>
 <body>
   <div id="siteHeader"></div>
@@ -36,9 +36,11 @@
         <div class="faq-item">
           <button class="faq-q">提供哪些付款方式？<span class="icon">+</span></button>
           <div class="faq-a">
-            <p>目前提供兩種付款方式：</p>
+            <p>目前提供三種付款方式，皆為<strong>先付款、後出貨</strong>（超商取貨不提供貨到付款）：</p>
             <p><strong>1. ATM 轉帳</strong>：凱基銀行（代碼 809），帳號 0005-95-3239840-6，戶名 林宛儒。轉帳後請於結帳頁填寫您的轉帳末 5 碼與日期，方便我們對帳。</p>
-            <p><strong>2. 貨到付款</strong>：商品送達超商時，於櫃台付款給超商人員，本店不收取額外手續費。</p>
+            <p><strong>2. 街口支付</strong>：於結帳頁掃描 QR Code 付款，並填寫您的街口帳號或暱稱與付款日期。</p>
+            <p><strong>3. LINE Pay</strong>：於結帳頁掃描 QR Code 付款，並填寫付款時的 LINE 顯示名稱與付款日期。</p>
+            <p>我們確認款項後，就會為您安排出貨。</p>
           </div>
         </div>
         <div class="faq-item">
@@ -78,7 +80,8 @@
         <div class="faq-item">
           <button class="faq-q">不知道收件超商的店號怎麼辦？<span class="icon">+</span></button>
           <div class="faq-a">
-            <p>結帳頁有提供「全家門市查詢」與「7-11 門市查詢」連結，可直接查詢您想要的門市店名與店號。</p>
+            <p>不用另外查詢！結帳時選擇 7-11 或全家後，輸入店名、路名或店號即可搜尋，也可以依縣市、鄉鎮市區挑選門市，店名、店號與地址會自動帶入。</p>
+            <p>7-11 清單只列出有提供冷凍交貨便的門市。如果清單裡找不到您要的門市，也可以改為手動輸入。</p>
           </div>
         </div>
         <div class="faq-item">
@@ -104,9 +107,8 @@
         <div class="faq-item">
           <button class="faq-q">建議的加熱方式？<span class="icon">+</span></button>
           <div class="faq-a">
-            <p><strong>茶香鵝肉 / 整隻茶鵝</strong>：建議冷藏退冰後，常溫即可食用，或微波 1～2 分鐘加熱風味更佳。</p>
-            <p><strong>煙燻鵝腳 / 鵝舌</strong>：常溫退冰後可直接食用，或微波 30～60 秒。</p>
-            <p><strong>肉燥包</strong>：解凍後加熱、淋於白飯或麵條上即可享用。</p>
+            <div id="faqHeating"></div>
+            <p>※ 各商品的建議加熱時間略有不同，請以商品頁上的說明為準。</p>
           </div>
         </div>
         <div class="faq-item">
@@ -139,7 +141,6 @@
           <button class="faq-q">公司行號或大量訂購可以團購嗎？<span class="icon">+</span></button>
           <div class="faq-a">
             <p>歡迎！我們有公司、社區、學校的團購方案，數量越多優惠越好。請透過 LINE 或電話與我們聯繫，告訴我們您的需求，我們會提供專屬報價。</p>
-            <p>您也可以前往「<a href="https://jianliang-goose.github.io/group_order/" target="_blank" style="color: var(--primary); font-weight: 600;">限時團購頁面</a>」看本期方案。</p>
           </div>
         </div>
         <div class="faq-item">
@@ -152,7 +153,7 @@
 
       <!-- Still need help -->
       <div style="background: var(--white); border: 1px solid var(--line); border-radius: var(--r-md); padding: 32px; text-align: center; max-width: 600px; margin: 0 auto;">
-        <h3 style="font-family: var(--font-brand); font-size: 1.3rem; letter-spacing: 2px; margin-bottom: 10px;">還有其他問題嗎？</h3>
+        <h3 style="font-family: var(--font-serif); font-size: 1.3rem; letter-spacing: 2px; margin-bottom: 10px;">還有其他問題嗎？</h3>
         <p style="color: var(--ink-soft); margin-bottom: 22px;">歡迎透過 LINE 或電話直接聯繫我們，平日通常 1 小時內回覆。</p>
         <div style="display: flex; gap: 12px; justify-content: center; flex-wrap: wrap;">
           <a href="contact.html" class="btn btn-ghost">填寫聯絡表單</a>
@@ -165,8 +166,10 @@
 
   <div id="siteFooter"></div>
 
-  <script src="js/main.js?v=1"></script>
+  <script src="js/main.js?v=2"></script>
   <script>
+    document.getElementById('faqHeating').innerHTML = heatingGuideHTML();
+
     document.querySelectorAll('.faq-item').forEach(item => {
       item.querySelector('.faq-q').addEventListener('click', () => {
         item.classList.toggle('open');

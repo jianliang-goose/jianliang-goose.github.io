@@ -8,25 +8,47 @@
   <link rel="preconnect" href="https://fonts.googleapis.com">
   <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
   <link href="https://fonts.googleapis.com/css2?family=Noto+Sans+TC:wght@400;500;700&family=Noto+Serif+TC:wght@500;700&family=Outfit:wght@400;600;700&display=swap" rel="stylesheet">
-  <link rel="stylesheet" href="css/style.css?v=1">
+  <link rel="stylesheet" href="css/style.css?v=3">
 </head>
 <body>
   <div id="siteHeader"></div>
 
   <!-- Hero -->
   <section class="hero">
-    <div class="hero-inner container">
-      <span class="eyebrow">SINCE 1985</span>
-      <h1>傳承四十年・茶香鵝肉</h1>
-      <p>
-        嚴選優質白鵝，獨家茶燻工法，<br>
-        將每一片鵝肉的鮮嫩與深層香氣，封存在每一次切片的瞬間。
-      </p>
-      <div class="hero-actions">
-        <a href="products.html" class="btn btn-primary btn-lg">立即選購</a>
-        <a href="about.html" class="btn btn-outline btn-lg">品牌故事</a>
+    <div class="container hero-grid">
+      <div class="hero-copy">
+        <span class="eyebrow">SINCE 1985</span>
+        <h1>傳承四十年<br><span class="hl">茶香鵝肉</span></h1>
+        <p>
+          四十年的老味道，第二代的新開始。<br>
+          嚴選優質白鵝、獨家茶燻工法，不在新竹也能在家吃到。
+        </p>
+        <div class="hero-actions">
+          <a href="products.html" class="btn btn-primary btn-lg">立即選購 <span class="arrow">→</span></a>
+          <a href="about.html" class="btn btn-outline btn-lg">品牌故事</a>
+        </div>
+        <ul class="hero-points">
+          <li>獨家茶燻工法</li>
+          <li>真空急凍鎖鮮</li>
+          <li>7-11・全家冷凍取貨</li>
+        </ul>
+      </div>
+      <div class="hero-visual" aria-hidden="true">
+        <div class="hero-steam"><span></span><span></span><span></span></div>
+        <img src="images/hero_plate.png" alt="" class="hero-plate">
+        <img src="hero_chopsticks.png" alt="" class="hero-chopsticks">
+        <div class="hero-badge">
+          <svg viewBox="0 0 120 120">
+            <defs><path id="heroBadgePath" d="M60,60 m-44,0 a44,44 0 1,1 88,0 a44,44 0 1,1 -88,0"/></defs>
+            <text><textPath href="#heroBadgePath" textLength="274" lengthAdjust="spacing">SINCE 1985 • JIANLIANG GOOSE • HSINCHU •</textPath></text>
+          </svg>
+          <img src="brand_logo.png" alt="">
+        </div>
       </div>
     </div>
+    <svg class="hero-wave" viewBox="0 0 1440 70" preserveAspectRatio="none" aria-hidden="true">
+      <path d="M0,38 C220,72 420,6 720,30 C1000,52 1220,12 1440,34 L1440,70 L0,70 Z" fill="currentColor"/>
+    </svg>
   </section>
 
   <!-- Highlights -->
@@ -79,9 +101,9 @@
         </div>
         <div class="story-text">
           <span class="eyebrow">Our Story</span>
-          <h3>四十年的火候，<br>留住一隻鵝最美的瞬間</h3>
-          <p>從父親時代的小攤車，到今日的店面，建良鵝肉始終堅持一件事：把最純粹的茶香鵝肉，端到客人面前。</p>
-          <p>每天清晨進貨、現場處理、慢工煙燻——時間給的味道，無法取代。</p>
+          <h3>把家的味道，<br>繼續傳下去</h3>
+          <p>建良鵝肉，在新竹走過四十年的歲月。第一代從一間小店開始，一點一滴累積出建良的味道；到了第二代，接下的不只是一間店，更是爸媽大半輩子的心血與客人四十年來的信任。</p>
+          <p>第一代，創造了建良的味道。<br>第二代，把這份味道繼續傳下去。</p>
           <a href="about.html" class="btn btn-ghost btn-sm" style="margin-top:14px;">閱讀更多 →</a>
         </div>
       </div>
@@ -113,22 +135,25 @@
     <div class="container" style="display:flex; align-items:center; justify-content:space-between; gap:24px; flex-wrap:wrap; color:white;">
       <div>
         <div style="font-family: var(--font-en); letter-spacing: 4px; color: var(--accent); font-size: 0.85rem; margin-bottom: 6px;">GROUP BUY</div>
-        <h3 style="font-family: var(--font-brand); font-size: 1.4rem; letter-spacing: 2px;">公司、社區揪團好划算</h3>
-        <p style="opacity: .9; margin-top: 4px;">滿額免運、團主好禮，前往團購頁面看本期方案。</p>
+        <h3 style="font-family: var(--font-serif); font-size: 1.4rem; letter-spacing: 2px;">公司、社區揪團好划算</h3>
+        <p style="opacity: .9; margin-top: 4px;">公司、社區、學校大量訂購，歡迎與我們聯繫，提供專屬報價。</p>
       </div>
-      <a href="https://jianliang-goose.github.io/group_order/" target="_blank" class="btn" style="background: white; color: var(--primary); font-weight: 700;">前往團購頁 →</a>
+      <a href="contact.html" class="btn" style="background: white; color: var(--primary); font-weight: 700;">團購洽詢 →</a>
     </div>
   </section>
 
   <div id="siteFooter"></div>
 
   <script src="data.js"></script>
-  <script src="js/main.js?v=1"></script>
+  <script src="js/main.js?v=2"></script>
   <script src="js/shop.js?v=1"></script>
   <script>
     (async function () {
       const data = await fetchShop();
-      const featured = data.products.filter(p => p.Category === 'main' || p.Category === 'snack').slice(0, 3);
+      // 商品表沒有填分類（全部是 other）時，改列前 3 項商品
+      let featured = data.products.filter(p => p.Category === 'main' || p.Category === 'snack');
+      if (!featured.length) featured = data.products;
+      featured = featured.slice(0, 3);
       const grid = document.getElementById('featuredGrid');
       if (!featured.length) {
         grid.innerHTML = '<div style="grid-column:1/-1; text-align:center; padding:40px; color: var(--ink-mute);">商品準備中…</div>';
