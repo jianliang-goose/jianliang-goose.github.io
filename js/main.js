@@ -245,6 +245,26 @@ function copyToClipboard(text, btn) {
   }
 }
 
+/* ----------- 顯示使用者或後台輸入的文字前先轉義 ----------- */
+function escapeHtml(s) {
+  return String(s ?? '').replace(/[&<>"']/g, c => ({ '&': '&amp;', '<': '&lt;', '>': '&gt;', '"': '&quot;', "'": '&#39;' }[c]));
+}
+
+/* ----------- 網站公告（後台「設定」頁；有載入商品資料的頁面才會顯示） ----------- */
+function renderAnnouncement() {
+  const header = document.getElementById('siteHeader');
+  if (!header || typeof fetchShop !== 'function') return;
+  fetchShop().then(({ settings }) => {
+    const text = settings && settings.announcement ? String(settings.announcement).trim() : '';
+    if (!text || document.getElementById('siteAnnounce')) return;
+    const bar = document.createElement('div');
+    bar.id = 'siteAnnounce';
+    bar.className = 'site-announce';
+    bar.textContent = text;
+    header.insertAdjacentElement('afterend', bar);
+  }).catch(() => {});
+}
+
 /* ----------- Number formatter ----------- */
 function fmtPrice(n) {
   return '$' + Number(n || 0).toLocaleString('en-US');
@@ -278,6 +298,7 @@ function heatingGuideHTML() {
 document.addEventListener('DOMContentLoaded', () => {
   renderHeader();
   renderFooter();
+  renderAnnouncement();
 });
 
 window.addEventListener('storage', (e) => {

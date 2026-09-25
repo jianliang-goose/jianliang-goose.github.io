@@ -4,11 +4,11 @@
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
   <title>訂單查詢｜建良鵝肉</title>
-  <meta name="description" content="輸入手機號碼查詢您的訂單狀態與付款狀態。">
+  <meta name="description" content="輸入手機號碼與訂單編號，查詢您的訂單狀態與付款狀態。">
   <link rel="preconnect" href="https://fonts.googleapis.com">
   <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
   <link href="https://fonts.googleapis.com/css2?family=Noto+Sans+TC:wght@400;500;700&family=Noto+Serif+TC:wght@500;700&family=Outfit:wght@400;600;700&display=swap" rel="stylesheet">
-  <link rel="stylesheet" href="css/style.css?v=4">
+  <link rel="stylesheet" href="css/style.css?v=5">
 </head>
 <body>
   <div id="siteHeader"></div>
@@ -16,7 +16,7 @@
   <section class="page-header">
     <div class="eyebrow">Order Tracking</div>
     <h1>訂單查詢</h1>
-    <p>輸入您下單時的手機號碼，查詢訂單狀態</p>
+    <p>輸入下單時的手機號碼與訂單編號，查詢訂單狀態</p>
   </section>
 
   <section class="section">
@@ -26,7 +26,11 @@
           <div class="form-group">
             <label class="form-label">手機號碼 <span class="required">*</span></label>
             <input type="tel" class="form-input" id="trackPhone" required placeholder="0912-345-678 或 0912345678">
-            <div class="form-help">系統會找出與此號碼相關的所有訂單</div>
+          </div>
+          <div class="form-group">
+            <label class="form-label">訂單編號 <span class="required">*</span></label>
+            <input type="text" class="form-input" id="trackOrderId" required placeholder="例如：60925-1805R" autocapitalize="characters" autocomplete="off">
+            <div class="form-help">訂單編號在下單完成的頁面，以及您傳給我們的 LINE 訊息裡。</div>
           </div>
           <button type="submit" class="btn btn-primary btn-block btn-lg" id="trackBtn">查詢訂單</button>
         </form>
@@ -40,8 +44,8 @@
 
   <div id="siteFooter"></div>
 
-  <script src="js/main.js?v=2"></script>
-  <script src="js/shop.js?v=1"></script>
+  <script src="js/main.js?v=3"></script>
+  <script src="js/shop.js?v=3"></script>
   <script>
     function statusClass(status) {
       const s = String(status || '').trim();
@@ -70,16 +74,16 @@
           <div class="tracking-card">
             <div class="order-head">
               <div>
-                <div class="order-id">${o.orderId || '???'}</div>
-                <div style="font-size: 0.82rem; color: var(--ink-mute); margin-top: 4px;">${fmtDate(o.createdDate)}</div>
+                <div class="order-id">${escapeHtml(o.orderId || '???')}</div>
+                <div style="font-size: 0.82rem; color: var(--ink-mute); margin-top: 4px;">${escapeHtml(fmtDate(o.createdDate))}</div>
               </div>
-              <span class="status-badge ${statusClass(o.status)}">${o.status || '待處理'}</span>
+              <span class="status-badge ${statusClass(o.status)}">${escapeHtml(o.status || '待處理')}</span>
             </div>
-            <div class="field-row"><div class="lbl">訂購內容</div><div class="val">${o.items || '-'}</div></div>
+            <div class="field-row"><div class="lbl">訂購內容</div><div class="val">${escapeHtml(o.items || '-')}</div></div>
             <div class="field-row"><div class="lbl">總金額</div><div class="val" style="color: var(--primary); font-weight: 700;">${fmtPrice(o.grandTotal || o.totalAmount)}</div></div>
-            <div class="field-row"><div class="lbl">付款方式</div><div class="val">${o.paymentMethod || '-'}${o.paymentInfo ? '<br><span style="color:var(--ink-mute); font-size: 0.85rem;">' + o.paymentInfo + '</span>' : ''}</div></div>
-            <div class="field-row"><div class="lbl">對帳狀態</div><div class="val">${o.paymentStatus || '未核對'}</div></div>
-            <div class="field-row"><div class="lbl">取貨方式</div><div class="val">${o.deliveryMethod || '-'}${o.storeInfo ? '<br>' + o.storeInfo : ''}${o.pickupTime ? '<br>預計自取：' + o.pickupTime : ''}</div></div>
+            <div class="field-row"><div class="lbl">付款方式</div><div class="val">${escapeHtml(o.paymentMethod || '-')}${o.paymentInfo ? '<br><span style="color:var(--ink-mute); font-size: 0.85rem;">' + escapeHtml(o.paymentInfo) + '</span>' : ''}</div></div>
+            <div class="field-row"><div class="lbl">對帳狀態</div><div class="val">${escapeHtml(o.paymentStatus === '已對帳' ? '已收款' : (o.paymentStatus || '未核對'))}</div></div>
+            <div class="field-row"><div class="lbl">取貨方式</div><div class="val">${escapeHtml(o.deliveryMethod || '-')}${o.storeInfo ? '<br>' + escapeHtml(o.storeInfo) : ''}${o.pickupTime ? '<br>預計自取：' + escapeHtml(o.pickupTime) : ''}</div></div>
           </div>
         `).join('');
     }
@@ -87,7 +91,9 @@
     async function doSearch(e) {
       e.preventDefault();
       const phone = document.getElementById('trackPhone').value.trim();
+      const orderId = document.getElementById('trackOrderId').value.trim().toUpperCase();
       if (!phone) { showToast('請輸入手機號碼', 'error'); return false; }
+      if (!orderId) { showToast('請輸入訂單編號', 'error'); return false; }
 
       const btn = document.getElementById('trackBtn');
       const errorEl = document.getElementById('trackError');
@@ -101,13 +107,16 @@
         const res = await fetch(GAS_API_URL, {
           method: 'POST',
           headers: { 'Content-Type': 'text/plain' },
-          body: JSON.stringify({ action: 'searchOrder', phone }),
+          body: JSON.stringify({ action: 'searchOrder', phone, orderId }),
         });
         const data = await res.json();
-        if (data.result === 'success' && data.orders && data.orders.length) {
-          renderResults(data.orders);
+        // 後端也會比對訂單編號；這裡再過濾一次，只顯示這筆訂單
+        const orders = (data.result === 'success' && data.orders ? data.orders : [])
+          .filter(o => String(o.orderId || '').trim().toUpperCase() === orderId);
+        if (orders.length) {
+          renderResults(orders);
         } else {
-          errorEl.textContent = '查無此號碼的訂單，請確認輸入是否正確。';
+          errorEl.textContent = '查無訂單，請確認手機號碼與訂單編號是否正確。';
           errorEl.style.display = 'block';
         }
       } catch (err) {

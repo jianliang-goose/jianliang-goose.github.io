@@ -8,7 +8,7 @@
   <link rel="preconnect" href="https://fonts.googleapis.com">
   <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
   <link href="https://fonts.googleapis.com/css2?family=Noto+Sans+TC:wght@400;500;700&family=Noto+Serif+TC:wght@500;700&family=Outfit:wght@400;600;700&display=swap" rel="stylesheet">
-  <link rel="stylesheet" href="css/style.css?v=4">
+  <link rel="stylesheet" href="css/style.css?v=5">
 </head>
 <body>
   <div id="siteHeader"></div>
@@ -84,6 +84,30 @@
 
   <div id="siteFooter"></div>
 
-  <script src="js/main.js?v=2"></script>
+  <script src="data.js"></script>
+  <script src="js/main.js?v=3"></script>
+  <script src="js/shop.js?v=3"></script>
+  <script>
+    // 後台「消息」頁有內容時，改顯示後台的消息；否則保留上面原本的內容
+    const NEWS_TAG_STYLES = {
+      '公告': 'background: rgba(192,57,43,.1); color: var(--error);',
+      '官網上線': 'background: rgba(46,125,50,.1); color: var(--success);',
+      '媒體報導': 'background: rgba(201,163,86,.15); color: var(--accent-dark);',
+    };
+    fetchShop().then(({ settings }) => {
+      let list = null;
+      try { list = JSON.parse((settings && settings.news_json) || 'null'); } catch (e) {}
+      if (!Array.isArray(list) || !list.length) return;
+      document.querySelector('.news-list').innerHTML = list.map(n => `
+        <article class="news-item">
+          <div class="news-meta">
+            ${escapeHtml(String(n.date || '').replace(/-/g, '.'))}
+            ${n.tag ? `<span class="news-tag" style="${NEWS_TAG_STYLES[n.tag] || ''}">${escapeHtml(n.tag)}</span>` : ''}
+          </div>
+          <h3>${escapeHtml(n.title)}</h3>
+          <p style="white-space: pre-line;">${escapeHtml(n.body)}</p>
+        </article>`).join('');
+    });
+  </script>
 </body>
 </html>

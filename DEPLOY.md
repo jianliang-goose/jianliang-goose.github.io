@@ -1,94 +1,79 @@
-# 建良鵝肉 官方網站 部署指南
+# 建良鵝肉 官方網站 維護說明
 
-這個 `website/` 資料夾是一個 **完全獨立** 的靜態網站，所有資源（圖片、字型、商品資料）都在資料夾內，可直接部署到任何靜態主機。
+## 架構
 
-最終目標：把這個網站部署到 `https://jianliang-goose.github.io/`（USER 根目錄）。
+| 部分 | 放在哪裡 | 說明 |
+|---|---|---|
+| 網站 | GitHub `jianliang-goose/jianliang-goose.github.io` → Cloudflare（Workers 靜態網站） | 推送到 `main` 後約 1 分鐘自動上線 |
+| 網址 | https://jianliang-goose.jianliang-goose.workers.dev/ | 之後可綁自訂網域 |
+| 商品、設定、訂單 | Google 試算表（「建良鵝肉團購網訂單」） | 工作表：Products、Settings、Orders、AdminLog |
+| 後端 | 試算表的 Apps Script（原始碼備份在 Google 雲端硬碟 `★接案資料/建良鵝肉/網站後端/Code.gs`，不放在這個 repo） | 下單、查訂單、後台讀寫 |
+| 後台 | `/admin.html`（網站上沒有連結，請把網址加入書籤） | 密碼 = Apps Script「指令碼屬性」`ADMIN_KEY` |
 
----
+舊的 GitHub Pages 網址（https://jianliang-goose.github.io/）在綁好正式網域前仍會同步更新。
 
-## 部署到 GitHub Pages USER 首頁
+## 更新網站
 
-### 步驟 1️⃣ ： 在 GitHub 建一個新 repo
+- `main` = 正式網站；推到其他分支（例如 `preview`）會產生 Cloudflare 預覽網址，不影響正式網站。
+- 建置指令 `bash _tools/build.sh` 只把網站檔案複製到 `dist/`，`_tools/`、本文件、設定檔都不會公開。
+- 改了 `css/`、`js/` 的檔案，記得把各頁引用的 `?v=` 版本號加一，避免訪客看到快取的舊檔。
 
-1. 登入 https://github.com/jianliang-goose
-2. 點右上角 `+` → `New repository`
-3. **Repository name 必須打：`jianliang-goose.github.io`**（一字不差，全部小寫）
-4. Public（公開）
-5. **不要** 勾選任何 README / .gitignore / license
-6. 按 `Create repository`
+## 後台（admin.html）
 
-### 步驟 2️⃣ ： 在你的電腦把網站推上去
+店家自己可以做的事：
 
-打開終端機，cd 到一個你方便的工作資料夾，然後執行：
+- **訂單**：勾「已收到款項」、改狀態（待處理 → 已出貨 / 完成待取 → 已完成）、寫店家備註、複製寄件資料。取消訂單會自動把庫存加回去。
+- **商品**：新增、修改（價格、優惠價、照片、說明、庫存、標籤）、下架／重新上架、調整順序、刪除。照片存在店家雲端硬碟的「建良鵝肉官網圖片」資料夾。
+- **客戶**：從訂單整理的名單，可搜尋、匯出 Excel（CSV）。
+- **消息**：新增、編輯、刪除「最新消息」。
+- **設定**：開放／暫停接單、網站公告、運費、ATM 帳號、街口與 LINE Pay 收款碼。
 
-```bash
-# 1. 把這個 repo clone 下來（如果還沒有）
-git clone https://github.com/jianliang-goose/group_order.git
-cd group_order
+商品、公告、消息等修改約 5 分鐘內出現在網站上（Google 試算表「發布到網路」的快取）；訂單狀態是即時的。
+每次儲存商品前，舊資料會記在試算表的 AdminLog 工作表，改錯可以從那裡還原。
 
-# 2. 切到本次的分支
-git fetch origin
-git checkout claude/build-official-website-9oIXF
+## 後端（Apps Script）
 
-# 3. 把 website/ 內容複製到一個全新的資料夾
-cd ..
-cp -r group_order/website jianliang-goose.github.io
-cd jianliang-goose.github.io
+後台需要 API 版本 2（`Code.gs` 開頭的 `API_VERSION = 2`）。更新方式：
 
-# 4. 初始化 git 並推上去
-git init
-git branch -M main
-git add .
-git commit -m "Initial: 建良鵝肉 官方網站"
-git remote add origin https://github.com/jianliang-goose/jianliang-goose.github.io.git
-git push -u origin main
-```
+1. 打開訂單試算表 → 擴充功能 → Apps Script，把 `Code.gs` 全部換成新版，存檔。
+2. 第一次使用照片上傳前，在編輯器上方選 `authorizeDrive` → 執行 → 允許存取雲端硬碟。
+3. 部署 → 管理部署作業 → 鉛筆「編輯」→ 版本選「新版本」→ 部署。**不要**按「新增部署作業」，那會產生新網址。
 
-### 步驟 3️⃣ ： 啟用 GitHub Pages
+後台密碼：專案設定 → 指令碼屬性 → `ADMIN_KEY`。
 
-1. 進到剛才建的 repo `jianliang-goose.github.io`
-2. `Settings` → 左邊選單 `Pages`
-3. 在 **Source** 下選 `Deploy from a branch`
-4. **Branch**：`main`，folder：`/ (root)`
-5. 按 `Save`
+公開的動作只有下單（createOrder）、查訂單（searchOrder，需要手機＋訂單編號）與讀取商品設定（`?type=config`）；其他都要密碼。
 
-等大約 1～2 分鐘，網址 **https://jianliang-goose.github.io/** 就會生效。
+### Settings 工作表的設定
 
----
+| Key | 用途 | 沒設定時 |
+|---|---|---|
+| `is_open` | `false` = 暫停接單，結帳頁改顯示 `closed_message` | 開放 |
+| `closed_message` | 暫停接單時的說明 | 預設文字 |
+| `announcement` | 首頁、商品頁、結帳頁最上方的公告 | 不顯示 |
+| `shipping_fee`、`shipping_threshold` | 冷凍運費、滿額免運門檻 | 120、3000 |
+| `bank_name`、`bank_code`、`bank_account`、`bank_holder` | ATM 轉帳資訊 | 凱基銀行帳號 |
+| `jko_qr` | 街口收款碼圖片網址；清空＝結帳頁不顯示街口 | `images/pay-jkopay.jpg` |
+| `linepay_qr` | LINE Pay 收款碼圖片網址；空白＝不顯示 LINE Pay | 空白 |
+| `news_json` | 最新消息（後台管理，JSON） | 顯示 news.html 原本的內容 |
 
-## 之後要更新內容怎麼辦？
-
-直接在 `jianliang-goose.github.io` 這個 repo 修改，push 後 GitHub Pages 會自動重新部署。
-
-如果是改商品（如價格、名稱），請改 Google Sheet（與團購頁共用同一份），1～2 分鐘內官網會自動同步（CSV cache）。
-
----
+Products 工作表的 `Hidden` 欄填 `Y` 代表下架。
 
 ## 超商門市清單（結帳頁「選擇收件門市」）
 
 - 資料在 `data/cvs-711.json`、`data/cvs-family.json`，由 `_tools/update_cvs_stores.py` 從 7-11、全家官網的門市查詢抓取。
 - 7-11 只收錄有「冷凍交貨便」的門市；全家收錄全部門市；兩家都不含離島。
-- GitHub Actions（`.github/workflows/update-cvs-stores.yml`）每週一清晨自動更新。想立刻更新：repo 的 **Actions → 更新超商門市資料 → Run workflow**。
+- GitHub Actions（`.github/workflows/update-cvs-stores.yml`）每週一清晨自動更新，推送後 Cloudflare 會自動重新部署。想立刻更新：repo 的 **Actions → 更新超商門市資料 → Run workflow**。
 - 如果抓到的門市數量異常減少（例如對方網站改版），程式會停止、保留舊資料，GitHub 會寄信通知這次執行失敗。
 - 在自己電腦手動更新：`python _tools/update_cvs_stores.py`，再把 `data/` 推上去。
 
-## 收款 QR Code
+## 本機測試
 
-街口支付、LINE Pay 的收款碼設定在 `checkout.html` 的 `PAY_QR`，圖片放在 `images/`。
-
----
+在瀏覽器 console 設定 `localStorage.jl_dev_api = '模擬後端網址'`，這台瀏覽器的整個網站（商品、下單、查詢、後台）都會改連模擬後端，不會碰到正式訂單。測完用 `localStorage.removeItem('jl_dev_api')` 恢復。
 
 ## 自訂網域（選用）
 
-之後想用例如 `www.jianliang-goose.com` 這類網域：
-
-1. 買網域（推薦：Cloudflare、Gandi、PChome）
-2. 在 `Settings` → `Pages` → `Custom domain` 填入網域
-3. 在網域註冊商把 DNS CNAME 指向 `jianliang-goose.github.io`
-4. 等 DNS 生效後，網站就會走自訂網址（GitHub 會自動配 HTTPS）
-
----
+在 Cloudflare 的 jianliang-goose 專案 → Settings → Domains & Routes 加入自訂網域。網域要先加到 Cloudflare（.com.tw 等台灣網域需向台灣的網域商購買，再把 DNS 指到 Cloudflare）。綁好後可以關閉 GitHub Pages，並把 repo 改成私人。
 
 ## 與團購頁的關係
 
-舊的限時團購頁（`group_order` repo）已停用，官網上不再連到它。官網沿用同一個 Google Apps Script 後端與同一份 Google Sheet，舊團購訂單也在同一張訂單表裡。
+舊的限時團購頁（`group_order` repo）已停用並改為私人。官網沿用同一個 Apps Script 後端與同一份試算表，舊團購訂單也在同一張訂單表裡。

@@ -7,7 +7,7 @@
   <link rel="preconnect" href="https://fonts.googleapis.com">
   <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
   <link href="https://fonts.googleapis.com/css2?family=Noto+Sans+TC:wght@400;500;700&family=Noto+Serif+TC:wght@500;700&family=Outfit:wght@400;600;700&display=swap" rel="stylesheet">
-  <link rel="stylesheet" href="css/style.css?v=4">
+  <link rel="stylesheet" href="css/style.css?v=5">
 </head>
 <body>
   <div id="siteHeader"></div>
@@ -32,24 +32,33 @@
   <div id="siteFooter"></div>
 
   <script src="data.js"></script>
-  <script src="js/main.js?v=2"></script>
-  <script src="js/shop.js?v=1"></script>
+  <script src="js/main.js?v=3"></script>
+  <script src="js/shop.js?v=3"></script>
   <script src="js/cvs-picker.js?v=1"></script>
   <script>
     let allProducts = [];
     let shopSettings = {};
     let storePicker = null;
 
-    // 收款 QR Code（LINE Pay 待店家提供後填入圖片路徑）
-    const PAY_QR = {
-      jko: 'images/pay-jkopay.jpg',
-      linepay: '',
-    };
+    // 付款資訊由後台「設定」頁管理；收款碼沒設定時，結帳頁就不顯示該付款方式
+    function payConfig() {
+      return {
+        bankName: shopSetting(shopSettings, 'bank_name', '凱基銀行'),
+        bankCode: shopSetting(shopSettings, 'bank_code', '809'),
+        bankAccount: shopSetting(shopSettings, 'bank_account', '0005-95-3239840-6'),
+        bankHolder: shopSetting(shopSettings, 'bank_holder', '林宛儒'),
+        jkoQr: shopSetting(shopSettings, 'jko_qr', 'images/pay-jkopay.jpg'),
+        linepayQr: shopSetting(shopSettings, 'linepay_qr', ''),
+      };
+    }
 
     function payQrHtml(src, label) {
-      return src
-        ? `<img src="${src}" alt="建良鵝肉 ${label} 收款 QR Code">`
-        : `<div class="pay-qr-placeholder">${label}<br>收款碼<br>（待提供）</div>`;
+      return `<img src="${escapeHtml(imagePath(src))}" alt="建良鵝肉 ${label} 收款 QR Code">`;
+    }
+
+    function numSetting(key, fallback) {
+      const n = Number(shopSetting(shopSettings, key, ''));
+      return shopSetting(shopSettings, key, '') !== '' && !isNaN(n) ? n : fallback;
     }
 
     function buildLines() {
@@ -64,8 +73,8 @@
 
     function calcTotals(lines, deliveryMethod) {
       const subTotal = lines.reduce((s, l) => s + l.lineTotal, 0);
-      const threshold = parseFloat(shopSettings.shipping_threshold) || 3000;
-      const shippingFee = parseFloat(shopSettings.shipping_fee) || 120;
+      const threshold = numSetting('shipping_threshold', 3000);
+      const shippingFee = numSetting('shipping_fee', 120);
       let ship = 0;
       if (deliveryMethod === 'shipping') {
         ship = subTotal >= threshold ? 0 : shippingFee;
@@ -83,9 +92,22 @@
         </div>`;
     }
 
+    function renderClosed() {
+      const msg = shopSetting(shopSettings, 'closed_message', '') || '目前暫停接單，造成不便敬請見諒。';
+      document.getElementById('checkoutContent').innerHTML = `
+        <div class="empty-state">
+          <div class="icon">🙏</div>
+          <h3>目前暫停接單</h3>
+          <p style="white-space: pre-line;">${escapeHtml(msg)}</p>
+          <a href="https://lin.ee/uLbdSkD" target="_blank" class="btn btn-primary">LINE 詢問</a>
+        </div>`;
+    }
+
     function renderCheckout() {
+      if (!shopIsOpen(shopSettings)) { renderClosed(); return; }
       const lines = buildLines();
       if (!lines.length) { renderEmpty(); return; }
+      const pay = payConfig();
 
       document.getElementById('checkoutContent').innerHTML = `
         <form id="checkoutForm" class="cart-layout">
@@ -119,7 +141,7 @@
                   <input type="radio" name="deliveryMethod" value="shipping" checked>
                   <div class="tile-text">
                     <div class="tile-title">超商冷凍店到店</div>
-                    <div class="tile-sub">7-11 / 全家 ・ 滿 ${parseFloat(shopSettings.shipping_threshold || 3000).toLocaleString()} 免運</div>
+                    <div class="tile-sub">7-11 / 全家 ・ 滿 ${numSetting('shipping_threshold', 3000).toLocaleString()} 免運</div>
                   </div>
                 </label>
                 <label class="radio-tile" data-delivery="self">
@@ -176,35 +198,37 @@
                   <input type="radio" name="paymentMethod" value="atm" checked>
                   <div class="tile-text">
                     <div class="tile-title">ATM 轉帳</div>
-                    <div class="tile-sub">凱基銀行 ・ 轉帳後填寫末 5 碼</div>
+                    <div class="tile-sub">${escapeHtml(pay.bankName)} ・ 轉帳後填寫末 5 碼</div>
                   </div>
                 </label>
+                ${pay.jkoQr ? `
                 <label class="radio-tile" data-payment="jko">
                   <input type="radio" name="paymentMethod" value="jko">
                   <div class="tile-text">
                     <div class="tile-title">街口支付</div>
                     <div class="tile-sub">掃描 QR Code 付款</div>
                   </div>
-                </label>
+                </label>` : ''}
+                ${pay.linepayQr ? `
                 <label class="radio-tile" data-payment="linepay">
                   <input type="radio" name="paymentMethod" value="linepay">
                   <div class="tile-text">
                     <div class="tile-title">LINE Pay</div>
                     <div class="tile-sub">掃描 QR Code 付款</div>
                   </div>
-                </label>
+                </label>` : ''}
               </div>
 
               <!-- ATM info -->
               <div id="atmFields" style="margin-top: 18px;">
                 <div class="payment-info-box">
-                  <div><strong>🏦 凱基銀行（代碼 809）</strong></div>
+                  <div><strong>🏦 ${escapeHtml(pay.bankName)}（代碼 ${escapeHtml(pay.bankCode)}）</strong></div>
                   <div class="account-row">
                     <span>帳號：</span>
-                    <span class="account-num" id="bankAcc">0005-95-3239840-6</span>
-                    <button type="button" class="copy-btn" onclick="copyToClipboard('0005-95-3239840-6', this)">📋 複製</button>
+                    <span class="account-num" id="bankAcc">${escapeHtml(pay.bankAccount)}</span>
+                    <button type="button" class="copy-btn" data-copy-account>📋 複製</button>
                   </div>
-                  <div>戶名：<strong>林宛儒</strong></div>
+                  <div>戶名：<strong>${escapeHtml(pay.bankHolder)}</strong></div>
                 </div>
                 <div class="form-row" style="margin-top: 14px;">
                   <div class="form-group">
@@ -221,7 +245,7 @@
               <!-- 街口支付 -->
               <div id="jkoFields" style="margin-top: 18px; display: none;">
                 <div class="payment-info-box pay-qr">
-                  ${payQrHtml(PAY_QR.jko, '街口支付')}
+                  ${pay.jkoQr ? payQrHtml(pay.jkoQr, '街口支付') : ''}
                   <div>
                     <div><strong>📱 街口支付</strong></div>
                     <div>請掃描 QR Code，或截圖後於街口 APP 內掃描完成付款。</div>
@@ -242,7 +266,7 @@
               <!-- LINE Pay -->
               <div id="linepayFields" style="margin-top: 18px; display: none;">
                 <div class="payment-info-box pay-qr">
-                  ${payQrHtml(PAY_QR.linepay, 'LINE Pay')}
+                  ${pay.linepayQr ? payQrHtml(pay.linepayQr, 'LINE Pay') : ''}
                   <div>
                     <div><strong>📱 LINE Pay</strong></div>
                     <div>請掃描 QR Code，或截圖後於 LINE Pay 內掃描完成付款。</div>
@@ -315,6 +339,10 @@
         jko: document.getElementById('jkoFields'),
         linepay: document.getElementById('linepayFields'),
       };
+
+      document.querySelector('[data-copy-account]').addEventListener('click', e => {
+        copyToClipboard(payConfig().bankAccount, e.currentTarget);
+      });
 
       storePicker = createCvsPicker(document.getElementById('storePicker'));
       storePicker.setChain(document.querySelector('input[name="storeType"]:checked').value);
@@ -474,6 +502,7 @@
           <h1>訂購完成！</h1>
           <p style="color: var(--ink-soft);">${now.toLocaleString('zh-TW', { hour12: false })} 訂單已送出</p>
           <div class="order-id">訂單編號 <span class="num">${orderId}</span></div>
+          <p style="color: var(--ink-mute); font-size: 0.85rem;">之後用「手機號碼＋這個訂單編號」就能在訂單查詢頁看到出貨進度。</p>
 
           <div class="line-share-section" style="background: linear-gradient(135deg,#06c755,#00b548); padding: 18px; border-radius: var(--r-md); margin: 18px 0; color: white; box-shadow: 0 6px 18px rgba(6,199,85,.25);">
             <p style="margin-bottom: 12px;">📬 請傳送訂單給我們，方便後續對帳與聯繫</p>

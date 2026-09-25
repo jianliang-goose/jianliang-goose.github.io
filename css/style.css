@@ -88,6 +88,17 @@ input, select, textarea { font-family: inherit; font-size: 1rem; }
 }
 .site-header.scrolled { box-shadow: var(--shadow-sm); }
 
+/* 網站公告（後台設定） */
+.site-announce {
+  background: var(--primary-dark);
+  color: #fff;
+  text-align: center;
+  font-size: 0.92rem;
+  line-height: 1.6;
+  padding: 10px 16px;
+  white-space: pre-line;
+}
+
 .nav-wrap {
   height: 100%;
   display: flex;

@@ -6,8 +6,14 @@
    - 提供 createOrder() 送單到 GAS_API_URL
    ========================================================= */
 
-// 與團購頁共用相同 GAS endpoint
-const GAS_API_URL = "https://script.google.com/macros/s/AKfycbwk9J3y6SC9xaZhWDk5Qle9s4bTIFgEDcxHZujeXW3npQKjEweHozG__ZOIPIsaiDq2/exec";
+// 測試用：在瀏覽器 console 設定 localStorage.jl_dev_api = 模擬後端網址，
+// 這台瀏覽器的整個網站（商品、下單、查詢、後台）都會改連模擬後端
+const DEV_API_URL = (() => {
+  try { return localStorage.getItem('jl_dev_api') || ''; } catch (e) { return ''; }
+})();
+
+// Apps Script 後端（訂單試算表）
+const GAS_API_URL = DEV_API_URL || "https://script.google.com/macros/s/AKfycbwk9J3y6SC9xaZhWDk5Qle9s4bTIFgEDcxHZujeXW3npQKjEweHozG__ZOIPIsaiDq2/exec";
 const PRODUCTS_CSV_URL = "https://docs.google.com/spreadsheets/d/e/2PACX-1vQd_Hya-NceMfrF79aibzVQ8SoUqHI5nL_DHpGhtG8lCDUT4y_iNA2XzS9R-uJqWJtNk2XaMfP86vvL/pub?gid=598932868&single=true&output=csv";
 const SETTINGS_CSV_URL = "https://docs.google.com/spreadsheets/d/e/2PACX-1vQd_Hya-NceMfrF79aibzVQ8SoUqHI5nL_DHpGhtG8lCDUT4y_iNA2XzS9R-uJqWJtNk2XaMfP86vvL/pub?gid=1252826992&single=true&output=csv";
 const CORS_PROXY = "https://api.allorigins.win/raw?url=";
@@ -68,25 +74,41 @@ async function fetchShop({ force = false } = {}) {
 
   _shopFetchPromise = (async () => {
     try {
-      const ts = Date.now();
-      const fetchOne = async (url) => {
-        try {
-          const r = await fetch(url + `&t=${ts}`);
-          if (!r.ok) throw new Error('Direct fetch failed');
-          return await r.text();
-        } catch (e) {
-          const r = await fetch(CORS_PROXY + encodeURIComponent(url + `&t=${ts}`));
-          if (!r.ok) throw new Error('Proxy fetch failed');
-          return await r.text();
-        }
-      };
+      let rawProducts, sObj = {};
 
-      const [pText, sText] = await Promise.all([
-        fetchOne(PRODUCTS_CSV_URL),
-        fetchOne(SETTINGS_CSV_URL),
-      ]);
+      if (DEV_API_URL) {
+        // 測試用：直接讀模擬後端的 ?type=config
+        const cfg = await (await fetch(DEV_API_URL + '?type=config')).json();
+        rawProducts = (cfg.products || []).map(p => Object.fromEntries(Object.entries(p).map(([k, v]) => [k, v === null ? '' : String(v)])));
+        Object.entries(cfg.settings || {}).forEach(([k, v]) => { sObj[k] = v === null ? '' : String(v).trim(); });
+      } else {
+        const ts = Date.now();
+        const fetchOne = async (url) => {
+          try {
+            const r = await fetch(url + `&t=${ts}`);
+            if (!r.ok) throw new Error('Direct fetch failed');
+            return await r.text();
+          } catch (e) {
+            const r = await fetch(CORS_PROXY + encodeURIComponent(url + `&t=${ts}`));
+            if (!r.ok) throw new Error('Proxy fetch failed');
+            return await r.text();
+          }
+        };
 
-      const products = parseCSV(pText).map(p => ({
+        const [pText, sText] = await Promise.all([
+          fetchOne(PRODUCTS_CSV_URL),
+          fetchOne(SETTINGS_CSV_URL),
+        ]);
+
+        rawProducts = parseCSV(pText);
+        parseCSV(sText).forEach(row => {
+          const keyCol = Object.keys(row).find(k => k.toLowerCase() === 'key');
+          const valCol = Object.keys(row).find(k => k.toLowerCase() === 'value');
+          if (keyCol && row[keyCol]) sObj[row[keyCol].trim()] = (valCol ? (row[valCol] || '').trim() : '');
+        });
+      }
+
+      const products = rawProducts.map(p => ({
         ID: p.ID || '',
         Name: p.Name || '',
         Price: parseFloat(p.Price) || 0,
@@ -97,14 +119,8 @@ async function fetchShop({ force = false } = {}) {
         PromoTag: p.PromoTag || '',
         PromoDesc: p.PromoDesc || '',
         Stock: p.Stock !== '' && p.Stock !== undefined ? p.Stock : '',
-      })).filter(p => p.ID && p.Name);
-
-      const sObj = {};
-      parseCSV(sText).forEach(row => {
-        const keyCol = Object.keys(row).find(k => k.toLowerCase() === 'key');
-        const valCol = Object.keys(row).find(k => k.toLowerCase() === 'value');
-        if (keyCol && row[keyCol]) sObj[row[keyCol].trim()] = (valCol ? (row[valCol] || '').trim() : '');
-      });
+        Hidden: p.Hidden || '',
+      })).filter(p => p.ID && p.Name && !isHiddenProduct(p));
 
       if (!products.length) throw new Error('No products');
 
@@ -120,6 +136,22 @@ async function fetchShop({ force = false } = {}) {
   })();
 
   return _shopFetchPromise;
+}
+
+/* ---------- Settings helpers（後台「設定」頁的內容） ---------- */
+
+// 試算表沒有這個設定時用預設值；有設定但刻意清空（例如移除收款碼）就維持空白
+function shopSetting(settings, key, fallback = '') {
+  const v = settings ? settings[key] : undefined;
+  return v === undefined || v === null ? fallback : String(v).trim();
+}
+
+function shopIsOpen(settings) {
+  return !/^(false|0|no|否)$/i.test(shopSetting(settings, 'is_open', 'true'));
+}
+
+function isHiddenProduct(p) {
+  return /^(y|yes|true|1|是)$/i.test(String(p.Hidden || '').trim());
 }
 
 /* ---------- Product helpers ---------- */
