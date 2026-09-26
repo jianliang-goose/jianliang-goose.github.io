@@ -222,13 +222,15 @@ input, select, textarea { font-family: inherit; font-size: 1rem; }
     flex-direction: column;
     padding: 12px;
     gap: 0;
-    transform: translateY(-110%);
-    transition: transform .25s;
+    /* 收起時整個移到畫面外並隱藏；只移 -110% 的話，選單底部會蓋住頁首上緣 */
+    transform: translateY(calc(-100% - var(--header-h)));
+    visibility: hidden;
+    transition: transform .25s, visibility 0s .25s;
     box-shadow: var(--shadow-md);
     max-height: calc(100vh - var(--header-h));
     overflow-y: auto;
   }
-  .nav-menu.open { transform: translateY(0); }
+  .nav-menu.open { transform: translateY(0); visibility: visible; transition: transform .25s; }
   .nav-menu li { width: 100%; }
   .nav-menu a {
     display: block;

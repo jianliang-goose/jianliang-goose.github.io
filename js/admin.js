@@ -846,7 +846,7 @@ function showHelp() {
       <h3>什麼時候看得到？</h3>
       <p>商品、公告、消息、運費等修改，<b>網站約 5 分鐘內更新</b>。訂單狀態是即時的。</p>
       <h3>改錯了怎麼辦？</h3>
-      <p>每次儲存商品前，系統都會把舊資料記在試算表的「AdminLog」工作表，可以請 Evelyn 協助還原。</p>
+      <p>每次儲存商品前，系統都會把舊資料記在試算表的「AdminLog」工作表，可以請依婷協助還原。</p>
       <div class="a-form-actions"><span class="a-grow"></span><button type="button" class="btn btn-primary" data-act="close-modal">知道了</button></div>
     </div>`);
 }
