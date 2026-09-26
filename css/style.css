@@ -356,13 +356,15 @@ input, select, textarea { font-family: inherit; font-size: 1rem; }
   filter: drop-shadow(0 30px 40px rgba(0,0,0,.6));
   animation: heroPlateIn 1.2s cubic-bezier(.2, .8, .2, 1) both;
 }
+/* 圖片右側補上了筷子後半段（1024 → 1500px）：寬度與位置按比例放大、旋轉中心不變，原本那段筷子位置不動 */
 .hero-chopsticks {
   position: absolute;
-  width: 80%;
+  width: 117.19%;
   max-width: none;
-  right: -16%;
+  right: -53.19%;
   top: -6%;
   transform: rotate(14deg);
+  transform-origin: 34.13% 50%;
   filter: drop-shadow(20px 30px 30px rgba(0,0,0,.5));
   animation: heroChopIn 1s .5s cubic-bezier(.2, .8, .2, 1) both, heroChopFloat 6s 1.5s ease-in-out infinite;
 }
@@ -458,7 +460,7 @@ input, select, textarea { font-family: inherit; font-size: 1rem; }
 @media (max-width: 480px) {
   .hero h1 { letter-spacing: 4px; }
   .hero-actions .btn-lg { padding: 14px 28px; }
-  .hero-chopsticks { width: 74%; right: -10%; }
+  .hero-chopsticks { width: 108.4%; right: -44.4%; }
 }
 @media (prefers-reduced-motion: reduce) {
   .hero *, .hero *::before { animation: none !important; }
